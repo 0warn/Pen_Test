@@ -166,5 +166,35 @@ One way that websites may attempt to validate file uploads is to check that this
 6. Then you can able to execute any type of arbitary command what you want. You got an access of that server.
 
 --- 
-> Here you go........ This is something new right......
-> See you later........... ;)
+
+## Preventing file execution in user-accessible directories
+
+While it's clearly better to prevent dangerous file types being uploaded in the first place, the second line of defense is to stop the server from executing any scripts that do slip through the net.
+
+As a precaution, servers generally only run scripts whose MIME type they have been explicitly configured to execute. Otherwise, they may just return some kind of error message or, in some cases, serve the contents of the file as plain text instead:
+```
+GET /static/exploit.php?command=id HTTP/1.1
+    Host: normal-website.com
+
+
+    HTTP/1.1 200 OK
+    Content-Type: text/plain
+    Content-Length: 39
+
+    <?php echo system($_GET['command']); ?> 
+```
+
+---
+
+## Continued
+ This behavior is potentially interesting in its own right, as it may provide a way to leak source code, but it nullifies any attempt to create a web shell.
+
+This kind of configuration often differs between directories. A directory to which user-supplied files are uploaded will likely have much stricter controls than other locations on the filesystem that are assumed to be out of reach for end users. If you can find a way to upload a script to a different directory that's not supposed to contain user-supplied files, the server may execute your script after all.
+### Tip
+
+Web servers often use the `filename` field in `multipart/form-data` requests to determine the name and location where the file should be saved.
+
+You should also note that even though you may send all of your requests to the same domain name, this often points to a reverse proxy server of some kind, such as a load balancer. Your requests will often be handled by additional servers behind the scenes, which may also be configured differently. 
+
+--- 
+> To be continue.......... 
