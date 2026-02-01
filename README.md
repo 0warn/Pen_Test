@@ -301,11 +301,24 @@ Web servers use these kinds of configuration files when present, but you're not 
     3. Replace the contents of the file (your PHP payload) with the following Apache directive: `AddType application/x-httpd-php .l33t`
 
     4. This maps an arbitrary extension (`.l33t`) to the executable MIME type `application/x-httpd-php`. As the server uses the `mod_php` module, it knows how to handle this already.
-
+	
 6. Send the request and observe that the file was successfully uploaded.
+	<h2 align="center"> APACHE CONFIG CHANGE</h2>
+	<img width="1919" height="1048" alt="image" src="https://github.com/user-attachments/assets/841e88e7-2f4d-45c8-8f44-6029a9f6cc67" />
+
 7. Use the back arrow in Burp Repeater or ciado replay to return to the original request for uploading your **PHP exploit**.
-8. Change the value of the **filename parameter** from `exploit.php` to `exploit.l33t`. Send the request again and notice that the file was uploaded successfully.
+8. Change the value of the **filename parameter** from `exploit.php` to `exploit.l33t` or what extension name you give it `<.name>`. Send the request again and notice that the file was uploaded successfully.
+	
+	<h2 align="center"> THEN PHP FILE UPLOAD </h2>
+	<img width="1920" height="1048" alt="image" src="https://github.com/user-attachments/assets/0c59cab8-af59-4a4d-a6ea-3d145cd59872" />
+	
+	<h2 align="center"> or </h2>
+	<img width="764" height="929" alt="image" src="https://github.com/user-attachments/assets/9265044f-9ead-4aeb-985d-bf107b86f8f2" />
+
 9. Switch to the other Repeater or replay tab containing the `GET /files/avatars/<YOUR-IMAGE>` request. In the path, replace the name of your image file with `exploit.l33t` and send the request. Observe that **Carlos's secret** was returned in the response. Thanks to our malicious `.htaccess` file, the `.l33t` file was executed as if it were a `.php` file. 
+	<h2 align="center"> HERE WE GO</h2>
+	<img width="760" height="613" alt="image" src="https://github.com/user-attachments/assets/5cafa5d7-ed7b-48ce-a082-033302cf1b08" />
+
 
 ---
 
